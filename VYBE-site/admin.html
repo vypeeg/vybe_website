@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VYBE Admin</title>
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <p class="eyebrow">VYBE LOCAL ADMIN</p>
+        <h1>إدارة الكتالوج</h1>
+        <p class="muted">عدّل المنتجات والإعدادات، ثم اضغط "تحميل catalog.js" واستبدل الملف القديم في <code>data/catalog.js</code>.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn--ghost" id="resetBtn" type="button">إعادة تحميل البيانات</button>
+        <button class="btn" id="downloadBtn" type="button">تحميل catalog.js</button>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head"><h2>الإعدادات</h2></div>
+      <div class="grid grid-4">
+        <label class="field"><span>واتساب (دولي بدون +)</span><input id="setWhatsapp" type="text" dir="ltr" placeholder="201508016013"></label>
+        <label class="field"><span>الرقم الظاهر</span><input id="setDisplay" type="text" dir="ltr" placeholder="01508016013"></label>
+        <label class="field"><span>TikTok username</span><input id="setTiktok" type="text" dir="ltr" placeholder="eg.vyb"></label>
+        <label class="field"><span>Instagram username</span><input id="setInstagram" type="text" dir="ltr" placeholder=""></label>
+      </div>
+      <div class="grid grid-3" style="margin-top:12px">
+        <label class="field"><span>سعر 20×30</span><input id="price20x30" type="number" min="0" step="1"></label>
+        <label class="field"><span>سعر 30×40</span><input id="price30x40" type="number" min="0" step="1"></label>
+        <label class="field"><span>سعر 40×50</span><input id="price40x50" type="number" min="0" step="1"></label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>الأقسام</h2>
+        <button class="btn btn--ghost btn--sm" id="addCatBtn" type="button">+ إضافة قسم</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table" id="catsTable">
+          <thead><tr><th>ID</th><th>عربي</th><th>English</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="muted small">الـ ID يستخدم في المنتجات (مثال: <code>islamic</code>). لا تستخدم مسافات.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>المنتجات</h2>
+        <button class="btn btn--ghost btn--sm" id="addPosterBtn" type="button">+ إضافة منتج</button>
+      </div>
+      <div id="posters"></div>
+    </section>
+  </div>
+
+  <template id="posterTpl">
+    <article class="poster-card">
+      <div class="poster-card__head">
+        <strong class="poster-title"></strong>
+        <div class="row-actions">
+          <button class="btn btn--ghost btn--sm" data-act="dup" type="button">نسخ</button>
+          <button class="btn btn--danger btn--sm" data-act="del" type="button">حذف</button>
+        </div>
+      </div>
+      <div class="grid grid-4">
+        <label class="field"><span>ID</span><input data-k="id" type="text" dir="ltr"></label>
+        <label class="field"><span>القسم</span><select data-k="cat"></select></label>
+        <label class="field"><span>الاسم بالعربي</span><input data-k="ar" type="text"></label>
+        <label class="field"><span>Name in English</span><input data-k="en" type="text" dir="ltr"></label>
+        <label class="field"><span>Tag عربي</span><input data-k="tagAr" type="text"></label>
+        <label class="field"><span>Tag English</span><input data-k="tagEn" type="text" dir="ltr"></label>
+        <label class="field"><span>مسار الصورة</span><input data-k="img" type="text" dir="ltr" placeholder="images/file.jpg"></label>
+        <label class="field"><span>Featured</span><select data-k="featured"><option value="">لا</option><option value="true">نعم</option></select></label>
+        <label class="field"><span>عرض الصورة w</span><input data-k="w" type="number" min="1" step="1"></label>
+        <label class="field"><span>ارتفاع الصورة h</span><input data-k="h" type="number" min="1" step="1"></label>
+      </div>
+      <p class="muted small poster-note">ضع ملف الصورة داخل <code>images/</code> ثم اكتب مساره هنا.</p>
+    </article>
+  </template>
+
+  <script src="data/catalog.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
