@@ -12,7 +12,7 @@ window.VYBE_CATALOG = {
     "prices": {
       "20x30": 200,
       "30x40": 330,
-      "40x50": 0
+      "40x50": 100
     }
   },
   "categories": [
