@@ -183,6 +183,128 @@
     render();
   });
 
+  /* ---------- GitHub publishing ---------- */
+  var GH_KEY = "vybe_admin_gh";
+  var ghFields = { owner: "ghOwner", repo: "ghRepo", branch: "ghBranch", base: "ghBase", token: "ghToken" };
+
+  function ghLoad() {
+    try {
+      var s = JSON.parse(localStorage.getItem(GH_KEY) || "{}");
+      Object.keys(ghFields).forEach(function (k) { $(ghFields[k]).value = s[k] || (k === "branch" ? "main" : ""); });
+    } catch (e) { $("ghBranch").value = "main"; }
+  }
+  function ghRead() {
+    var s = {};
+    Object.keys(ghFields).forEach(function (k) { s[k] = $(ghFields[k]).value.trim(); });
+    s.base = s.base.replace(/^\/+|\/+$/g, "");
+    s.branch = s.branch || "main";
+    return s;
+  }
+  function ghSave() {
+    try { localStorage.setItem(GH_KEY, JSON.stringify(ghRead())); status("تم حفظ إعدادات جيت هاب في المتصفح.", "ok"); }
+    catch (e) { status("المتصفح منع حفظ الإعدادات. هتحتاج تكتبها كل مرة.", "err"); }
+  }
+  function status(msg, kind) {
+    var el = $("status");
+    el.hidden = !msg;
+    el.textContent = msg || "";
+    el.className = "status" + (kind ? " status--" + kind : "");
+  }
+  function b64Text(str) { return btoa(unescape(encodeURIComponent(str))); }
+  function ghPath(s, p) { return (s.base ? s.base + "/" : "") + p; }
+
+  function ghRequest(s, method, path, body) {
+    var url = "https://api.github.com/repos/" + encodeURIComponent(s.owner) + "/" + encodeURIComponent(s.repo) + "/contents/" + path.split("/").map(encodeURIComponent).join("/") +
+      (method === "GET" ? "?ref=" + encodeURIComponent(s.branch) : "");
+    return fetch(url, {
+      method: method,
+      headers: { "Authorization": "Bearer " + s.token, "Accept": "application/vnd.github+json", "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) { var err = new Error(j.message || ("HTTP " + r.status)); err.status = r.status; throw err; }
+        return j;
+      });
+    });
+  }
+
+  function ghPut(s, path, contentB64, message) {
+    return ghRequest(s, "GET", path).then(function (j) { return j.sha; }, function (e) {
+      if (e.status === 404) return undefined; throw e;
+    }).then(function (sha) {
+      var body = { message: message, content: contentB64, branch: s.branch };
+      if (sha) body.sha = sha;
+      return ghRequest(s, "PUT", path, body);
+    });
+  }
+
+  function ghCheck(s) {
+    if (!s.owner || !s.repo || !s.token) { status("املا اسم الحساب واسم الريبو والتوكن الأول.", "err"); return false; }
+    return true;
+  }
+  function ghError(e) {
+    var m = e.message || "";
+    if (e.status === 401) m = "التوكن غلط أو منتهي.";
+    else if (e.status === 403 || e.status === 404) m = "مفيش صلاحية أو الريبو/الـ branch/المسار غلط. اتأكد من الأسماء ومن صلاحية Contents: Read and write.";
+    status("فشل: " + m, "err");
+  }
+
+  function buildCatalogText() {
+    readSettings();
+    normalize();
+    var header = "/*\n  VYBE catalogue\n  --------------\n  تم تحديث هذا الملف من صفحة admin.html.\n*/\n";
+    return header + "window.VYBE_CATALOG = " + JSON.stringify(state, null, 2) + ";\n";
+  }
+
+  function publish() {
+    var s = ghRead();
+    if (!ghCheck(s)) return;
+    ghSave();
+    var btn = $("publishBtn");
+    btn.disabled = true; status("جاري النشر...");
+    ghPut(s, ghPath(s, "data/catalog.js"), b64Text(buildCatalogText()), "Update catalog from admin")
+      .then(function () { status("تم الحفظ على جيت هاب. الموقع هيتحدّث خلال دقيقة أو اتنين (اعمل Ctrl+Shift+R).", "ok"); })
+      .catch(ghError)
+      .then(function () { btn.disabled = false; });
+  }
+
+  function uploadImage(file, idx) {
+    var s = ghRead();
+    if (!ghCheck(s)) return;
+    var safe = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+    var reader = new FileReader();
+    status("جاري رفع الصورة...");
+    reader.onload = function () {
+      var dataUrl = String(reader.result);
+      var img = new Image();
+      img.onload = function () {
+        ghPut(s, ghPath(s, "images/" + safe), dataUrl.split(",")[1], "Add image " + safe)
+          .then(function () {
+            var p = state.posters[idx];
+            if (p) { p.img = "images/" + safe; p.w = img.naturalWidth; p.h = img.naturalHeight; }
+            renderPosters();
+            status("تم رفع الصورة وكتابة مسارها. لا تنسى تضغط \"حفظ ونشر على الموقع\".", "ok");
+          }).catch(ghError);
+      };
+      img.onerror = function () { status("الملف مش صورة صالحة.", "err"); };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t.hasAttribute || !t.hasAttribute("data-upload") || !t.files[0]) return;
+    var card = t.closest(".poster-card");
+    var idx = Array.prototype.indexOf.call($("posters").children, card);
+    if (idx >= 0) uploadImage(t.files[0], idx);
+    t.value = "";
+  });
+
+  $("publishBtn").addEventListener("click", publish);
+  $("ghSaveBtn").addEventListener("click", ghSave);
+  ghLoad();
+
   $("downloadBtn").addEventListener("click", download);
   $("resetBtn").addEventListener("click", function () {
     if (!confirm("إلغاء التعديلات وإعادة تحميل البيانات الأصلية من الملف؟")) return;
