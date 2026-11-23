@@ -25,4 +25,6 @@ code{background:rgba(27,26,21,.06);padding:1px 5px;border-radius:4px;font-size:.
 .poster-card__head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
 .poster-title{font-size:15px}.row-actions{display:flex;gap:8px}.poster-note{margin-bottom:0}
 @media (max-width:900px){.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.top{flex-direction:column}.grid-4,.grid-3{grid-template-columns:1fr}.top-actions,.top-actions .btn{width:100%}}
+@media (max-width:640px){.top{flex-direction:column}.grid-4,.grid-3{grid-template-columns:1fr}.top-actions,.top-actions .btn{width:100%}}.status{padding:12px 14px;border-radius:8px;background:#fff;border:1px solid var(--line);margin:0 0 16px;font-weight:700}
+.status--ok{border-color:#2e7d32;color:#2e7d32}.status--err{border-color:var(--danger);color:var(--danger)}
+.upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.upload-btn{display:inline-block}
